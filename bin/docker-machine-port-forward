@@ -3,4 +3,27 @@
 MACHINE_NAME=$1
 PORT=$2
 
-ssh docker@$(docker-machine ip $MACHINE_NAME) -NL $PORT:localhost:$PORT -i ~/.docker/machine/machines/$MACHINE_NAME/id_rsa
+if [ $# -ne 2 ]; then
+  echo "Usage: docker-machine-port-forward <machine name> <port>"
+  echo
+  exit 1
+fi
+
+IP=$(docker-machine ip $MACHINE_NAME)
+
+if [ ! $IP ]; then
+  echo "Could not obtain ip for docker-machine '$MACHINE_NAME'"
+  echo
+  exit 1
+fi
+
+echo "Forwarding localhost:$PORT to docker-machine '$MACHINE_NAME' port $PORT"
+echo "Send ^C to stop"
+echo
+
+ssh \
+  docker@$IP \
+  -i ~/.docker/machine/machines/$MACHINE_NAME/id_rsa \
+  -L $PORT:localhost:$PORT \
+  -N \
+  -o StrictHostKeyChecking=no
